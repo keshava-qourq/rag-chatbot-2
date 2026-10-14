@@ -6,6 +6,9 @@ psycopg[binary]==3.2.3
 # FastAPI needs this to parse multipart/form-data; POST /documents accepts a
 # file upload and has no other way to read it.
 python-multipart>=0.0.9
+# Starlette's SessionMiddleware (the HTTP-only session cookie behind SSO)
+# signs the cookie with this; it is not pulled in transitively by fastapi.
+itsdangerous>=2.1
 
 # Checks. The platform installs and runs this file before it reports that the
 # generated tests pass, so the test dependencies belong here rather than in a

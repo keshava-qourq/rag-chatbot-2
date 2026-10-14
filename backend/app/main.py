@@ -10,9 +10,12 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 
 from app import models  # noqa: F401 -- imported so the tables register before create_all
 from app.database import Base, engine, ensure_pgvector_extension
+from app.routers import auth as auth_router
+from app.routers import users as users_router
 from app.services import configured_services
 
 app = FastAPI(
@@ -34,6 +37,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Backs the session cookie every signed-in request relies on (see app/auth.py).
+# Starlette's SessionMiddleware signs this cookie with SESSION_SECRET_KEY and
+# marks it HTTP-only by default; the fallback below is only ever reached in a
+# local clone that has not set the real secret, never in a deployed instance.
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.getenv("SESSION_SECRET_KEY", "dev-insecure-secret-change-me"),
+    same_site="lax",
+    https_only=os.getenv("SESSION_COOKIE_SECURE", "").strip().lower() in {"1", "true", "yes"},
+)
+
+app.include_router(auth_router.router)
+app.include_router(users_router.router)
 
 # The scaffold ships no migrations, so the tables are created from the models on
 # startup. Replace this with Alembic before anything holds data worth keeping.
