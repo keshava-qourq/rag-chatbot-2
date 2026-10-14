@@ -1,0 +1,92 @@
+{
+  "architecture_npm": [
+    "react-markdown"
+  ],
+  "key": {
+    "app_design_id": "72d830fc-c58d-47d8-bb95-f2ee96d3aa24",
+    "app_design_version": 1,
+    "architecture_document_id": "351dbb67-61b4-48e1-b92e-1cfe2543961e",
+    "architecture_version": 1
+  },
+  "outcome": "prepared",
+  "packages": [
+    {
+      "ecosystem": "pypi",
+      "error": "Install could not run: Docker could not run the command: Unable to find image 'quorq-dev-sandbox:local' locally",
+      "name": "pypdf",
+      "status": "unverified",
+      "version": ">=4.0"
+    },
+    {
+      "ecosystem": "pypi",
+      "error": "Install could not run: Docker could not run the command: Unable to find image 'quorq-dev-sandbox:local' locally",
+      "name": "python-docx",
+      "status": "unverified",
+      "version": ">=1.1"
+    },
+    {
+      "ecosystem": "pypi",
+      "error": "Install could not run: Docker could not run the command: Unable to find image 'quorq-dev-sandbox:local' locally",
+      "name": "openai",
+      "status": "unverified",
+      "version": ">=1.40"
+    },
+    {
+      "ecosystem": "pypi",
+      "error": "Install could not run: Docker could not run the command: Unable to find image 'quorq-dev-sandbox:local' locally",
+      "name": "tiktoken",
+      "status": "unverified",
+      "version": ">=0.7"
+    },
+    {
+      "ecosystem": "pypi",
+      "error": "Install could not run: Docker could not run the command: Unable to find image 'quorq-dev-sandbox:local' locally",
+      "name": "pgvector",
+      "status": "unverified",
+      "version": ">=0.3"
+    },
+    {
+      "ecosystem": "pypi",
+      "error": "Install could not run: Docker could not run the command: Unable to find image 'quorq-dev-sandbox:local' locally",
+      "name": "rq",
+      "status": "unverified",
+      "version": ">=1.16"
+    },
+    {
+      "ecosystem": "pypi",
+      "error": "Install could not run: Docker could not run the command: Unable to find image 'quorq-dev-sandbox:local' locally",
+      "name": "redis",
+      "status": "unverified",
+      "version": ">=5.0"
+    },
+    {
+      "ecosystem": "pypi",
+      "error": "Install could not run: Docker could not run the command: Unable to find image 'quorq-dev-sandbox:local' locally",
+      "name": "boto3",
+      "status": "unverified",
+      "version": ">=1.34"
+    },
+    {
+      "ecosystem": "pypi",
+      "error": "Install could not run: Docker could not run the command: Unable to find image 'quorq-dev-sandbox:local' locally",
+      "name": "authlib",
+      "status": "unverified",
+      "version": ">=1.3"
+    },
+    {
+      "ecosystem": "pypi",
+      "error": "Install could not run: Docker could not run the command: Unable to find image 'quorq-dev-sandbox:local' locally",
+      "name": "sse-starlette",
+      "status": "unverified",
+      "version": ">=2.1"
+    },
+    {
+      "ecosystem": "npm",
+      "error": "Install could not run: Docker could not run the command: Unable to find image 'quorq-dev-sandbox:local' locally",
+      "name": "react-markdown",
+      "status": "unverified",
+      "version": ">=9.0"
+    }
+  ],
+  "prepared_by_run": "ec7fe287-654a-4e9a-87e2-eaf029c107ce"
+}

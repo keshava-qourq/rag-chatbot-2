@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import models  # noqa: F401 -- imported so the tables register before create_all
-from app.database import Base, engine
+from app.database import Base, engine, ensure_pgvector_extension
 from app.services import configured_services
 
 app = FastAPI(
@@ -37,6 +37,9 @@ app.add_middleware(
 
 # The scaffold ships no migrations, so the tables are created from the models on
 # startup. Replace this with Alembic before anything holds data worth keeping.
+# The pgvector extension has to exist before a model can declare a `Vector`
+# column, so this runs first; it is a no-op on the SQLite fallback.
+ensure_pgvector_extension()
 Base.metadata.create_all(bind=engine)
 
 
