@@ -13,7 +13,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from app import models  # noqa: F401 -- imported so the tables register before create_all
+from app.config import get_settings
 from app.database import Base, engine, ensure_pgvector_extension
+from app.providers import get_provider
 from app.routers import auth as auth_router
 from app.routers import users as users_router
 from app.services import configured_services
@@ -58,6 +60,20 @@ app.include_router(users_router.router)
 # column, so this runs first; it is a no-op on the SQLite fallback.
 ensure_pgvector_extension()
 Base.metadata.create_all(bind=engine)
+
+
+@app.on_event("startup")
+async def validate_ai_provider() -> None:
+    """Fail fast on a misconfigured AI provider, before any request is served.
+
+    Constructing the configured provider is enough to surface a missing
+    OPENAI_API_KEY or an unknown AI_PROVIDER value as a `ConfigurationError`
+    (see app/config.py and app/providers/registry.py) -- it makes no network
+    call, since `OpenAIProvider.__init__` only builds a client object. Left
+    uncaught, FastAPI aborts startup and the process never starts serving
+    requests, rather than discovering the problem on the first chat request.
+    """
+    get_provider(get_settings())
 
 
 @app.get("/health")
