@@ -8,6 +8,11 @@ import App from "./App";
 const ME_EMPLOYEE = { id: 1, email: "dana@acme.com", name: "Dana Employee", role: "employee" };
 const ME_ADMIN = { id: 2, email: "ash@acme.com", name: "Ash Admin", role: "admin" };
 
+const USERS = [
+  { id: 2, email: "ash@acme.com", name: "Ash Admin", role: "admin", created_at: "2026-01-01T00:00:00Z" },
+  { id: 3, email: "lee@acme.com", name: "Lee Employee", role: "employee", created_at: "2026-02-01T00:00:00Z" },
+];
+
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -101,5 +106,40 @@ describe("App", () => {
     const logoutCall = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
     expect(logoutCall).toBeTruthy();
     expect(String(logoutCall?.[0])).toContain("/auth/logout");
+  });
+
+  it("an admin navigating straight to /users reaches the People admin area (AC-007: they can open the admin area)", async () => {
+    mockFetchSequence([jsonResponse(ME_ADMIN), jsonResponse(USERS)]);
+
+    render(
+      <MemoryRouter initialEntries={["/users"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole("heading", { name: "People" })).toBeInTheDocument();
+    expect(await screen.findByText("Lee Employee")).toBeInTheDocument();
+    expect(screen.getByRole("table")).toBeInTheDocument();
+  });
+
+  it("an employee navigating straight to /users is routed away before the admin area ever renders (AC-008)", async () => {
+    mockFetchSequence([jsonResponse(ME_EMPLOYEE)]);
+
+    render(
+      <MemoryRouter initialEntries={["/users"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    await screen.findByText("Dana Employee");
+
+    // Not just "Users renders its own refusal" (that is Users.test.tsx's job) --
+    // here the route guard in App.tsx must redirect before Users is reached at
+    // all, so even Users' own "not authorised" fallback text never appears.
+    await waitFor(() => {
+      expect(screen.queryByRole("heading", { name: "People" })).not.toBeInTheDocument();
+    });
+    expect(screen.queryByText(/not authorised/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 });
