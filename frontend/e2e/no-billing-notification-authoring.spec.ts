@@ -53,6 +53,19 @@ test.describe("AC-064: no pricing, plan, subscription, invoice or payment-provid
       expect(bodyText, `found forbidden billing text: ${bad}`).not.toContain(bad);
     }
   });
+
+  test.skip(
+    true,
+    "AC-064 also requires sweeping Chat, Documents and People for the same vocabulary. All three sit " +
+      "behind Google Workspace SSO; GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET are deployment secrets this " +
+      "environment never sets (see the project's service-keys list), so no authenticated session can be " +
+      "minted from this harness and those three screens cannot be navigated to and read here the way the " +
+      "sign-in screen above was. frontend/src/screens/NoBillingSurfaces.test.tsx proves this criterion for " +
+      "those screens directly instead: it renders Documents and Users (People) and asserts their visible " +
+      "text matches none of the forbidden billing vocabulary, and it statically scans the source of every " +
+      "screen file -- including Chat.tsx, which has no session-driven fetch of its own to render-and-wait on " +
+      "-- for the same vocabulary, so no screen is left unswept even though not every screen is rendered here."
+  );
 });
 
 test.describe("AC-065: no email or push notification of any kind", () => {

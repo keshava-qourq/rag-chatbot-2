@@ -12,6 +12,7 @@ this fail.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -92,6 +93,21 @@ def test_source_never_sends_email_or_push_notifications() -> None:
     ]
     for term in forbidden:
         assert term not in source, f"found forbidden notification call {term!r} in backend source"
+
+
+def test_source_never_names_an_aws_notification_service_as_a_bare_token() -> None:
+    """Extends the call-shaped check above with the literal tokens the ticket
+    names (AC-065): `ses` and `sns` as whole words, not only as the specific
+    `ses.send_email` / `sns.publish` call shapes. A whole-word match avoids
+    false positives on unrelated identifiers (e.g. "sessions", "responses")
+    while still catching `boto3.client("ses")`, `import ses`, or any other
+    form of reaching for AWS's email/push services that the narrower check
+    above would miss."""
+    source = _all_source_text().lower()
+    for term in ["ses", "sns"]:
+        assert not re.search(rf"\b{term}\b", source), (
+            f"found bare AWS notification-service token {term!r} in backend source"
+        )
 
 
 def test_openapi_has_no_notification_or_webhook_endpoint() -> None:
