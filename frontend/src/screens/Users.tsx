@@ -57,6 +57,11 @@ export default function Screen() {
   const [errorMessage, setErrorMessage] = React.useState("");
   const [pendingId, setPendingId] = React.useState<number | null>(null);
   const [rowError, setRowError] = React.useState<{ id: number; message: string } | null>(null);
+  // AC-071/AC-073: demoting another admin requires confirmation before any
+  // PATCH is sent; this holds the user awaiting that confirmation.
+  const [confirmTarget, setConfirmTarget] = React.useState<ApiUser | null>(null);
+
+  const confirmBtnRef = React.useRef<HTMLButtonElement | null>(null);
 
   const primary = brand.primaryColor;
   const accent = brand.accentColor;
@@ -86,6 +91,17 @@ export default function Screen() {
     if (isAdmin) void load();
   }, [isAdmin, load]);
 
+  // Confirmation dialog: Escape cancels, focus moves into it (AC on accessibility).
+  React.useEffect(() => {
+    if (!confirmTarget) return undefined;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setConfirmTarget(null);
+    };
+    window.addEventListener("keydown", onKey);
+    if (confirmBtnRef.current) confirmBtnRef.current.focus();
+    return () => window.removeEventListener("keydown", onKey);
+  }, [confirmTarget]);
+
   async function promote(target: ApiUser, nextRole: "admin" | "employee") {
     setPendingId(target.id);
     setRowError(null);
@@ -107,6 +123,27 @@ export default function Screen() {
     } finally {
       setPendingId(null);
     }
+  }
+
+  // AC-071: changing an admin to employee opens this dialog before any
+  // request is sent. Promotion to admin keeps its current no-dialog behaviour.
+  function requestRoleChange(target: ApiUser, nextRole: "admin" | "employee") {
+    if (nextRole === "employee") {
+      setConfirmTarget(target);
+      return;
+    }
+    void promote(target, nextRole);
+  }
+
+  // AC-072: confirming submits the PATCH and closes the dialog. On a 409
+  // (last-admin refusal) or any other failure, promote() surfaces the
+  // message via rowError and the role stays displayed as admin because the
+  // local `users` state was never updated (AC-074).
+  function confirmRemoveAdmin() {
+    const target = confirmTarget;
+    if (!target) return;
+    setConfirmTarget(null);
+    void promote(target, "employee");
   }
 
   const labelStyle: React.CSSProperties = {
@@ -292,7 +329,7 @@ export default function Screen() {
                             </span>
                           ) : (
                             <Button
-                              onClick={() => void promote(u, nextRole)}
+                              onClick={() => requestRoleChange(u, nextRole)}
                               style={{
                                 backgroundColor: nextRole === "admin" ? primary : "transparent",
                                 color: nextRole === "admin" ? brand.backgroundColor : primary,
@@ -325,6 +362,57 @@ export default function Screen() {
           </Card>
         )}
       </div>
+
+      {/* Remove-admin confirmation (AC-071 through AC-074). */}
+      {confirmTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: rgba(primary, 0.45) }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setConfirmTarget(null);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remove-admin-title"
+            aria-describedby="remove-admin-desc"
+            className="bg-white w-full max-w-md p-6"
+            style={{ borderRadius: radius, borderTop: `3px solid ${accent}` }}
+          >
+            <h2
+              id="remove-admin-title"
+              className="text-lg font-semibold"
+              style={{ fontFamily: brand.fontHeading, color: primary }}
+            >
+              Remove admin rights from {confirmTarget.name}?
+            </h2>
+            <p id="remove-admin-desc" className="mt-3 text-sm leading-relaxed">
+              <span className="font-semibold" style={{ color: primary }}>{confirmTarget.name}</span> will no
+              longer be able to upload, re-process or delete documents, or manage other people's roles.
+            </p>
+            <div className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setConfirmTarget(null)}
+                className="px-4 py-2 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                style={{ borderRadius: radius, color: primary, border: `1px solid ${rgba(primary, 0.3)}` }}
+              >
+                Keep as admin
+              </button>
+              <button
+                type="button"
+                ref={confirmBtnRef}
+                onClick={confirmRemoveAdmin}
+                className="px-4 py-2 text-sm font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                style={{ borderRadius: radius, backgroundColor: primary }}
+              >
+                Remove admin rights
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
