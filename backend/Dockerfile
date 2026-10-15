@@ -10,8 +10,14 @@ COPY app ./app
 
 # Run as an unprivileged user. The service never needs root, and a container that
 # drops it limits what a compromise of the app can do to the host.
-RUN useradd --create-home --uid 10001 appuser
+RUN useradd --create-home --uid 10001 appuser \
+ && mkdir -p /data/media && chown appuser:appuser /data/media
 USER appuser
+
+# Uploaded documents when no S3_BUCKET is set. Mount a volume here in production,
+# or the files are lost whenever the container is replaced by a redeploy.
+ENV MEDIA_ROOT=/data/media
+VOLUME ["/data/media"]
 
 EXPOSE 8000
 

@@ -2,7 +2,8 @@
 
 Both require the admin guard from `app/auth.py`, the same dependency
 `app/routers/users.py` uses. Text extraction is a later packet's worker job;
-this router only validates, stores the original in S3, persists the row and
+this router only validates, stores the original (S3 or local disk, see
+`app/storage.py`), persists the row and
 enqueues exactly one processing job per accepted file.
 """
 
@@ -19,7 +20,7 @@ from app.database import get_db
 from app.models import Document, User
 from app.queue import enqueue_document_processing
 from app.schemas import DocumentOut, UploadOutcome
-from app.storage import upload_file_to_s3
+from app.storage import safe_filename, store_file
 
 router = APIRouter(tags=["documents"])
 
@@ -70,7 +71,7 @@ async def upload_documents(
 ) -> list[UploadOutcome]:
     """AC-009/AC-012/AC-013: validate, store, persist and enqueue -- per file.
 
-    A rejected file never reaches S3 or the queue (type and size are checked
+    A rejected file never reaches storage or the queue (type and size are checked
     first), and one rejection does not stop the remaining files in the same
     request from being accepted.
     """
@@ -97,8 +98,9 @@ async def upload_documents(
             await upload.close()
             continue
 
-        s3_key = f"documents/{uuid.uuid4().hex}-{filename}"
-        upload_file_to_s3(BytesIO(contents), s3_key)
+        # Column keeps its original name; it holds the storage key for S3 or disk alike.
+        s3_key = f"documents/{uuid.uuid4().hex}-{safe_filename(filename)}"
+        store_file(BytesIO(contents), s3_key)
 
         document = Document(
             filename=filename,
