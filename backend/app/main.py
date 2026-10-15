@@ -41,12 +41,13 @@ app.add_middleware(
 )
 
 # Backs the session cookie every signed-in request relies on (see app/auth.py).
-# Starlette's SessionMiddleware signs this cookie with SESSION_SECRET_KEY and
-# marks it HTTP-only by default; the fallback below is only ever reached in a
-# local clone that has not set the real secret, never in a deployed instance.
+# Starlette's SessionMiddleware signs this cookie with AUTH_SECRET -- the exact
+# key name the product owner is told to set before deployment -- and marks it
+# HTTP-only by default; the fallback below is only ever reached in a local
+# clone that has not set the real secret, never in a deployed instance.
 app.add_middleware(
     SessionMiddleware,
-    secret_key=os.getenv("SESSION_SECRET_KEY", "dev-insecure-secret-change-me"),
+    secret_key=os.getenv("AUTH_SECRET", "dev-insecure-secret-change-me"),
     same_site="lax",
     https_only=os.getenv("SESSION_COOKIE_SECURE", "").strip().lower() in {"1", "true", "yes"},
 )

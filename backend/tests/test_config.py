@@ -10,6 +10,9 @@ def test_defaults_when_env_unset(monkeypatch) -> None:
         "DATABASE_URL",
         "REDIS_URL",
         "S3_BUCKET",
+        "AWS_REGION",
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
         "GOOGLE_CLIENT_ID",
     ):
         monkeypatch.delenv(var, raising=False)
@@ -21,6 +24,9 @@ def test_defaults_when_env_unset(monkeypatch) -> None:
     assert settings.database_url == "sqlite:///./app.db"
     assert settings.redis_url == "redis://localhost:6379/0"
     assert settings.s3_bucket is None
+    assert settings.aws_region is None
+    assert settings.aws_access_key_id is None
+    assert settings.aws_secret_access_key is None
     assert settings.google_client_id is None
 
 
@@ -30,9 +36,9 @@ def test_reads_every_declared_variable(monkeypatch) -> None:
     monkeypatch.setenv("DATABASE_URL", "postgresql+psycopg://x")
     monkeypatch.setenv("REDIS_URL", "redis://x:6379/0")
     monkeypatch.setenv("S3_BUCKET", "bucket")
-    monkeypatch.setenv("S3_REGION", "us-east-1")
-    monkeypatch.setenv("S3_ACCESS_KEY_ID", "key")
-    monkeypatch.setenv("S3_SECRET_ACCESS_KEY", "secret")
+    monkeypatch.setenv("AWS_REGION", "us-east-1")
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "key")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "secret")
     monkeypatch.setenv("GOOGLE_CLIENT_ID", "client-id")
     monkeypatch.setenv("GOOGLE_CLIENT_SECRET", "client-secret")
     monkeypatch.setenv("GOOGLE_REDIRECT_URI", "https://example.com/callback")
@@ -44,9 +50,9 @@ def test_reads_every_declared_variable(monkeypatch) -> None:
     assert settings.database_url == "postgresql+psycopg://x"
     assert settings.redis_url == "redis://x:6379/0"
     assert settings.s3_bucket == "bucket"
-    assert settings.s3_region == "us-east-1"
-    assert settings.s3_access_key_id == "key"
-    assert settings.s3_secret_access_key == "secret"
+    assert settings.aws_region == "us-east-1"
+    assert settings.aws_access_key_id == "key"
+    assert settings.aws_secret_access_key == "secret"
     assert settings.google_client_id == "client-id"
     assert settings.google_client_secret == "client-secret"
     assert settings.google_redirect_uri == "https://example.com/callback"
@@ -72,9 +78,9 @@ def test_settings_is_frozen() -> None:
         database_url="sqlite:///./app.db",
         redis_url="redis://localhost:6379/0",
         s3_bucket=None,
-        s3_region=None,
-        s3_access_key_id=None,
-        s3_secret_access_key=None,
+        aws_region=None,
+        aws_access_key_id=None,
+        aws_secret_access_key=None,
         google_client_id=None,
         google_client_secret=None,
         google_redirect_uri=None,

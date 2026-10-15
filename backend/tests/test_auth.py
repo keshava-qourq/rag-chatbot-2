@@ -53,7 +53,7 @@ def test_login_redirects_to_google(client, monkeypatch) -> None:
 
 
 def test_callback_creates_user_sets_session_and_redirects(client, monkeypatch) -> None:
-    monkeypatch.delenv("ALLOWED_EMAIL_DOMAINS", raising=False)
+    monkeypatch.delenv("ALLOWED_EMAIL_DOMAIN", raising=False)
     monkeypatch.setattr(auth_module, "get_oauth", lambda: _fake_oauth("alice@example.com", "Alice"))
 
     response = client.get("/auth/callback", follow_redirects=False)
@@ -69,7 +69,7 @@ def test_callback_creates_user_sets_session_and_redirects(client, monkeypatch) -
 
 
 def test_first_account_becomes_admin_subsequent_become_employee(client, monkeypatch) -> None:
-    monkeypatch.delenv("ALLOWED_EMAIL_DOMAINS", raising=False)
+    monkeypatch.delenv("ALLOWED_EMAIL_DOMAIN", raising=False)
 
     monkeypatch.setattr(auth_module, "get_oauth", lambda: _fake_oauth("first@example.com", "First"))
     client.get("/auth/callback", follow_redirects=False)
@@ -84,7 +84,7 @@ def test_first_account_becomes_admin_subsequent_become_employee(client, monkeypa
 
 
 def test_callback_rejects_email_outside_allow_list(client, monkeypatch) -> None:
-    monkeypatch.setenv("ALLOWED_EMAIL_DOMAINS", "corp.example.com")
+    monkeypatch.setenv("ALLOWED_EMAIL_DOMAIN", "corp.example.com")
     monkeypatch.setattr(
         auth_module, "get_oauth", lambda: _fake_oauth("outsider@gmail.com", "Outsider")
     )
@@ -106,7 +106,7 @@ def test_callback_rejects_email_outside_allow_list(client, monkeypatch) -> None:
 
 
 def test_logout_invalidates_session(client, monkeypatch) -> None:
-    monkeypatch.delenv("ALLOWED_EMAIL_DOMAINS", raising=False)
+    monkeypatch.delenv("ALLOWED_EMAIL_DOMAIN", raising=False)
     monkeypatch.setattr(auth_module, "get_oauth", lambda: _fake_oauth("bob@example.com", "Bob"))
     client.get("/auth/callback", follow_redirects=False)
     assert client.get("/me").status_code == 200

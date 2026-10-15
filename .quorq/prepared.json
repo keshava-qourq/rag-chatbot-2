@@ -6,7 +6,7 @@
     "app_design_id": "72d830fc-c58d-47d8-bb95-f2ee96d3aa24",
     "app_design_version": 1,
     "architecture_document_id": "351dbb67-61b4-48e1-b92e-1cfe2543961e",
-    "architecture_version": 1
+    "architecture_version": 2
   },
   "outcome": "prepared",
   "packages": [
@@ -88,5 +88,5 @@
       "version": ">=9.0"
     }
   ],
-  "prepared_by_run": "ec7fe287-654a-4e9a-87e2-eaf029c107ce"
+  "prepared_by_run": "a0bc7721-82e4-4778-8772-623c19dc6a93"
 }

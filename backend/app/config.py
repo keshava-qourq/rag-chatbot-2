@@ -1,9 +1,16 @@
 """Typed application settings loaded from environment variables.
 
 One module the rest of the backend imports for every externally configured
-value -- the AI provider's credentials, the database and queue URLs, S3 and
+value -- the AI provider's credentials, the database and queue URLs, AWS and
 Google OAuth placeholders -- so a variable is named once here rather than
 scattered across `os.getenv` calls in a dozen files.
+
+The field names read from the environment here are deliberately the exact
+service-key names the product owner is told to set before deployment
+(`AWS_ACCESS_KEY_ID`, `AWS_REGION`, `AWS_SECRET_ACCESS_KEY`, `S3_BUCKET`,
+`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `OPENAI_API_KEY`) -- a module that
+invents its own name for a secret the product owner was told to set under a
+different one would never see it.
 """
 
 from __future__ import annotations
@@ -31,9 +38,9 @@ class Settings:
     database_url: str
     redis_url: str
     s3_bucket: str | None
-    s3_region: str | None
-    s3_access_key_id: str | None
-    s3_secret_access_key: str | None
+    aws_region: str | None
+    aws_access_key_id: str | None
+    aws_secret_access_key: str | None
     google_client_id: str | None
     google_client_secret: str | None
     google_redirect_uri: str | None
@@ -47,9 +54,9 @@ def load_settings() -> Settings:
         database_url=os.getenv("DATABASE_URL", "sqlite:///./app.db"),
         redis_url=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
         s3_bucket=os.getenv("S3_BUCKET") or None,
-        s3_region=os.getenv("S3_REGION") or None,
-        s3_access_key_id=os.getenv("S3_ACCESS_KEY_ID") or None,
-        s3_secret_access_key=os.getenv("S3_SECRET_ACCESS_KEY") or None,
+        aws_region=os.getenv("AWS_REGION") or None,
+        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID") or None,
+        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY") or None,
         google_client_id=os.getenv("GOOGLE_CLIENT_ID") or None,
         google_client_secret=os.getenv("GOOGLE_CLIENT_SECRET") or None,
         google_redirect_uri=os.getenv("GOOGLE_REDIRECT_URI") or None,

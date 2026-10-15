@@ -5,9 +5,10 @@ reaching for authlib or `request.session` directly, so the session's shape --
 a user id keyed under `"user_id"` -- and the allow-list's rule are each
 defined exactly once.
 
-`ALLOWED_EMAIL_DOMAINS` and `SESSION_SECRET_KEY` are read directly from the
-environment here, not through `app/config.py`: that module is owned by a
-different ticket and this one may only import from it, not extend it.
+`ALLOWED_EMAIL_DOMAIN` and `SESSION_SECRET_KEY`/`AUTH_SECRET` are read
+directly from the environment here, not through `app/config.py`: that module
+is owned by a different ticket and this one may only import from it, not
+extend it.
 """
 
 from __future__ import annotations
@@ -56,11 +57,15 @@ def get_oauth() -> OAuth:
 def allowed_domains() -> set[str]:
     """The configured allow-list, read fresh from the environment every call.
 
-    Read fresh (not cached) so a test can change `ALLOWED_EMAIL_DOMAINS`
-    between cases without reaching into module state. Deployment sets this
-    once at process start; re-reading it costs nothing meaningful there.
+    Read from `ALLOWED_EMAIL_DOMAIN` -- the exact key name the product owner
+    is told to set before deployment -- not a name this module invented.
+    Comma-separated so more than one corporate domain can still be allowed
+    under that one key. Read fresh (not cached) so a test can change
+    `ALLOWED_EMAIL_DOMAIN` between cases without reaching into module state.
+    Deployment sets this once at process start; re-reading it costs nothing
+    meaningful there.
     """
-    raw = os.getenv("ALLOWED_EMAIL_DOMAINS", "")
+    raw = os.getenv("ALLOWED_EMAIL_DOMAIN", "")
     return {domain.strip().lower() for domain in raw.split(",") if domain.strip()}
 
 

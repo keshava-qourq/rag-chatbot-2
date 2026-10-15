@@ -34,7 +34,7 @@ def _fake_oauth(email: str, name: str) -> MagicMock:
 
 
 def _signed_in_client(monkeypatch, email: str, name: str) -> TestClient:
-    monkeypatch.delenv("ALLOWED_EMAIL_DOMAINS", raising=False)
+    monkeypatch.delenv("ALLOWED_EMAIL_DOMAIN", raising=False)
     monkeypatch.setattr(auth_module, "get_oauth", lambda: _fake_oauth(email, name))
     client = TestClient(app)
     client.get("/auth/callback", follow_redirects=False)
@@ -141,7 +141,7 @@ def test_employee_promoting_unknown_user_id_is_403_not_404(monkeypatch) -> None:
     """AC-008: the admin guard runs before the row lookup, so an employee
     aimed at a nonexistent id is still turned away as unauthorised (403),
     never given a 404 that would leak whether that id exists."""
-    monkeypatch.delenv("ALLOWED_EMAIL_DOMAINS", raising=False)
+    monkeypatch.delenv("ALLOWED_EMAIL_DOMAIN", raising=False)
     employee_client = _signed_in_client(monkeypatch, "employee5@example.com", "Employee")
 
     response = employee_client.patch("/users/999999/role", json={"role": "admin"})
@@ -152,7 +152,7 @@ def test_employee_promoting_unknown_user_id_is_403_not_404(monkeypatch) -> None:
 def test_patch_role_unauthenticated_returns_401(monkeypatch) -> None:
     """The promote action itself -- not just the list -- is refused with no
     session at all, the same way GET /me and GET /users already are."""
-    monkeypatch.delenv("ALLOWED_EMAIL_DOMAINS", raising=False)
+    monkeypatch.delenv("ALLOWED_EMAIL_DOMAIN", raising=False)
     client = TestClient(app)
 
     response = client.patch("/users/1/role", json={"role": "admin"})
