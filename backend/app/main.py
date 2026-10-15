@@ -17,6 +17,7 @@ from app.config import get_settings
 from app.database import Base, engine, ensure_pgvector_extension
 from app.providers import get_provider
 from app.routers import auth as auth_router
+from app.routers import documents as documents_router
 from app.routers import users as users_router
 from app.services import configured_services
 
@@ -54,6 +55,7 @@ app.add_middleware(
 
 app.include_router(auth_router.router)
 app.include_router(users_router.router)
+app.include_router(documents_router.router)
 
 # The scaffold ships no migrations, so the tables are created from the models on
 # startup. Replace this with Alembic before anything holds data worth keeping.

@@ -50,3 +50,36 @@ class RoleUpdate(BaseModel):
     """The body PATCH /users/{id}/role accepts."""
 
     role: Literal["admin", "employee"]
+
+
+class DocumentOut(BaseModel):
+    """One row of GET /documents, and the `document` a successful upload returns.
+
+    `id` is a string even though the row's primary key is an int: the
+    frontend (`frontend/src/lib/documents.ts`) treats document ids as opaque
+    strings throughout.
+    """
+
+    id: str
+    filename: str
+    file_type: str
+    size_bytes: int
+    status: str
+    failure_reason: str | None = None
+    uploaded_by: str
+    uploaded_at: datetime
+    chunks: int | None = None
+
+
+class UploadOutcome(BaseModel):
+    """One element of POST /documents' response: one outcome per submitted file.
+
+    `reason` is set only when `accepted` is false; `document` only when it is
+    true -- a multi-file request reports each file's own outcome rather than
+    failing the whole request for one bad file.
+    """
+
+    filename: str
+    accepted: bool
+    reason: str | None = None
+    document: DocumentOut | None = None
