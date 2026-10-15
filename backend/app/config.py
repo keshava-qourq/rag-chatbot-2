@@ -44,6 +44,11 @@ class Settings:
     google_client_id: str | None
     google_client_secret: str | None
     google_redirect_uri: str | None
+    # Prepended to every S3 key, e.g. "media/<app>/" when the bucket is shared.
+    s3_prefix: str = ""
+    # Where uploads are kept when no S3 bucket is configured. A mounted volume in
+    # production; anything else is lost when the container is replaced.
+    media_root: str = "./data/uploads"
 
 
 def load_settings() -> Settings:
@@ -54,6 +59,8 @@ def load_settings() -> Settings:
         database_url=os.getenv("DATABASE_URL", "sqlite:///./app.db"),
         redis_url=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
         s3_bucket=os.getenv("S3_BUCKET") or None,
+        s3_prefix=os.getenv("S3_PREFIX", ""),
+        media_root=os.getenv("MEDIA_ROOT", "./data/uploads"),
         aws_region=os.getenv("AWS_REGION") or None,
         aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID") or None,
         aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY") or None,

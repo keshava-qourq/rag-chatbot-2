@@ -1,6 +1,6 @@
 """Tests for POST /documents and GET /documents.
 
-S3 and the queue are never touched: `upload_file_to_s3` and
+Storage and the queue are never touched: `store_file` and
 `enqueue_document_processing` are monkeypatched on the router module, the
 same way `test_auth.py` replaces `get_oauth` rather than contacting Google.
 """
@@ -36,7 +36,7 @@ def _stub_s3_and_queue(monkeypatch):
     """No real S3 write, no real Redis connection, for every test in this file."""
     s3_mock = MagicMock(return_value=None)
     queue_mock = MagicMock(return_value=None)
-    monkeypatch.setattr(documents_router, "upload_file_to_s3", s3_mock)
+    monkeypatch.setattr(documents_router, "store_file", s3_mock)
     monkeypatch.setattr(documents_router, "enqueue_document_processing", queue_mock)
     yield s3_mock, queue_mock
 
@@ -200,3 +200,34 @@ def test_multi_file_upload_reports_per_file_outcome_and_keeps_valid_ones(
 
     rows = admin.get("/documents").json()
     assert {row["filename"] for row in rows} == {"good.docx", "also-good.md"}
+
+
+def test_upload_works_with_no_bucket_and_no_redis(monkeypatch, tmp_path) -> None:
+    """What a deployed container without S3 or Redis does: keep the file on disk, still 200."""
+    from app import config, queue, storage
+
+    monkeypatch.setattr(documents_router, "store_file", storage.store_file)
+    monkeypatch.setattr(
+        documents_router, "enqueue_document_processing", queue.enqueue_document_processing
+    )
+    monkeypatch.setenv("MEDIA_ROOT", str(tmp_path))
+    monkeypatch.delenv("S3_BUCKET", raising=False)
+    monkeypatch.setenv("REDIS_URL", "redis://127.0.0.1:1/0")  # nothing listens here
+    config.get_settings(refresh=True)
+    monkeypatch.setattr(queue, "_queue", None)
+    monkeypatch.setattr(queue, "_redis_conn", None)
+    admin = _admin_client(monkeypatch)
+
+    try:
+        response = admin.post(
+            "/documents", files={"files": ("../hand book.pdf", b"%PDF-1.4 real", "application/pdf")}
+        )
+    finally:
+        config.get_settings(refresh=True)
+
+    assert response.status_code == 200
+    assert response.json()[0]["accepted"] is True
+    (saved,) = [p for p in tmp_path.rglob("*") if p.is_file()]
+    assert saved.read_bytes() == b"%PDF-1.4 real"
+    assert saved.name.endswith("-hand_book.pdf")
+    assert saved.parent == tmp_path / "documents"
